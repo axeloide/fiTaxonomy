@@ -155,10 +155,13 @@ def ImportTaxonAttribute(oTaxon, xmlTaxonData, sAttrName, typecast=unicode, asli
         
     if aslist:
         ValueList = [typecast(item.text.strip()) for item in elAttr]
-        oTaxon.set(sRoot+u"/taxonomy/ncbi/"+sTagName, ValueList)
+        if len(ValueList)>0:
+            oTaxon.set(sRoot+u"/taxonomy/ncbi/"+sTagName, ValueList)
     else:
-        assert(len(elAttr) == 1)
-        oTaxon.set(sRoot+u"/taxonomy/ncbi/"+sTagName, typecast(elAttr[0].text))
+        assert( len(elAttr)<2 )
+        if len(elAttr)==1:
+            oTaxon.set(sRoot+u"/taxonomy/ncbi/"+sTagName, typecast(elAttr[0].text))
+        
         
 
     
