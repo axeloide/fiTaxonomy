@@ -121,13 +121,13 @@ def GetTaxonData(idTax):
     return elTaxon[0]
 
             
-def ImportTaxonAttribute(oTaxon, xmlTaxonData, sAttrName, typecast=unicode, aslist=False, sTagName=None ):
+def ImportTaxonAttribute(dictTagging, xmlTaxonData, sAttrName, typecast=unicode, aslist=False, sTagName=None ):
     """
         Does the actual transfer of values from the XML into FluidInfo tags.
         
         @note It prepends the tag-path in sRoot to the tags to be imported. sRoot is currently just the user-namespace.
         
-        @param oTaxon: The FOM object of the taxon we are dealing with.
+        @param dictTagging: A dict[tagpath]=tagvalue for the object of the taxon we are dealing with.
 
         @param xmlTaxonData: An ElementTree containing the <Taxon> XML branch sent by NCBI.
                              See example XML: eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=9913&mode=xml
@@ -158,11 +158,11 @@ def ImportTaxonAttribute(oTaxon, xmlTaxonData, sAttrName, typecast=unicode, asli
     if aslist:
         ValueList = [typecast(item.text.strip()) for item in elAttr]
         if len(ValueList)>0:
-            oTaxon.set(sRoot+u"/taxonomy/ncbi/"+sTagName, ValueList)
+            dictTagging[sRoot+u"/taxonomy/ncbi/"+sTagName] =  ValueList
     else:
         assert( len(elAttr)<2 )
         if len(elAttr)==1:
-            oTaxon.set(sRoot+u"/taxonomy/ncbi/"+sTagName, typecast(elAttr[0].text))
+            dictTagging[sRoot+u"/taxonomy/ncbi/"+sTagName] = typecast(elAttr[0].text)
         
         
 def containsAny(str, set):
@@ -179,29 +179,31 @@ def ImportTaxonById(TaxId):
     assert( xmlTaxonData is not None)
     assert( TaxId == int(xmlTaxonData.find("TaxId").text))
     
-    # Assign about tag value
     ScientificName = unicode(xmlTaxonData.find("ScientificName").text)
+
+    dictTagging = dict()
     
     # WARNING: For the time being, we'll discard any unusual taxa with digits in their scientific names.
     if containsAny(ScientificName, '0123456789:'):
         print "Not importing weird taxon:", ScientificName
         return
-    
-    oTaxon = Object(about=ScientificName.lower())
 
-    ImportTaxonAttribute(oTaxon, xmlTaxonData, "ScientificName", typecast=unicode)
-    ImportTaxonAttribute(oTaxon, xmlTaxonData, "TaxId", typecast=int)
-    ImportTaxonAttribute(oTaxon, xmlTaxonData, "ParentTaxId", typecast=int)
-    ImportTaxonAttribute(oTaxon, xmlTaxonData, "Rank", typecast=unicode)
-    ImportTaxonAttribute(oTaxon, xmlTaxonData, "Division", typecast=unicode)
-    ImportTaxonAttribute(oTaxon, xmlTaxonData, "OtherNames/GenbankCommonName", typecast=unicode, sTagName=u"GenbankCommonName")
+    # Assign about tag value. Lowercase!
+    sAbout = ScientificName.lower()
+
+    ImportTaxonAttribute(dictTagging, xmlTaxonData, "ScientificName", typecast=unicode)
+    ImportTaxonAttribute(dictTagging, xmlTaxonData, "TaxId", typecast=int)
+    ImportTaxonAttribute(dictTagging, xmlTaxonData, "ParentTaxId", typecast=int)
+    ImportTaxonAttribute(dictTagging, xmlTaxonData, "Rank", typecast=unicode)
+    ImportTaxonAttribute(dictTagging, xmlTaxonData, "Division", typecast=unicode)
+    ImportTaxonAttribute(dictTagging, xmlTaxonData, "OtherNames/GenbankCommonName", typecast=unicode, sTagName=u"GenbankCommonName")
     
-    ImportTaxonAttribute(oTaxon, xmlTaxonData, "OtherNames/Synonym", typecast=unicode, aslist=True, sTagName=u"Synonyms")
-    ImportTaxonAttribute(oTaxon, xmlTaxonData, "OtherNames/CommonName", typecast=unicode, aslist=True, sTagName=u"CommonNames")
+    ImportTaxonAttribute(dictTagging, xmlTaxonData, "OtherNames/Synonym", typecast=unicode, aslist=True, sTagName=u"Synonyms")
+    ImportTaxonAttribute(dictTagging, xmlTaxonData, "OtherNames/CommonName", typecast=unicode, aslist=True, sTagName=u"CommonNames")
     
-    ImportTaxonAttribute(oTaxon, xmlTaxonData, "LineageEx/Taxon/ScientificName", typecast=unicode, aslist=True, sTagName=u"Lineage")
+    ImportTaxonAttribute(dictTagging, xmlTaxonData, "LineageEx/Taxon/ScientificName", typecast=unicode, aslist=True, sTagName=u"Lineage")
     # NOTE: FluidInfo only implements "sets of strings". There is not support for "sets of integers"!
-    ImportTaxonAttribute(oTaxon, xmlTaxonData, "LineageEx/Taxon/TaxId", typecast=unicode, aslist=True, sTagName=u"LineageIds")
+    ImportTaxonAttribute(dictTagging, xmlTaxonData, "LineageEx/Taxon/TaxId", typecast=unicode, aslist=True, sTagName=u"LineageIds")
     
     # TODO: Query for LinkOut data and add info to this object
     #       Most wanted are Wikipedia ArticleIDs provided by iPhylo:
@@ -212,8 +214,23 @@ def ImportTaxonById(TaxId):
     #           http://en.wikipedia.org/w/api.php?action=query&pageids=682482&format=xml
     #           more info on  http://www.mediawiki.org/wiki/API
 
-    oTaxon.save()
-    print "Imported TaxId:", TaxId, " as about:",oTaxon.about, " with uid:", oTaxon.uid
+
+    ##################################
+    # Create and do all the tagging in
+    # a single call to the FluidInfo-API!
+    ##
+    # Convert into the cumbersome dict in dict format needed by the values.put() API
+    ddValues = dict()
+    for tagpath, tagvalue in dictTagging.items():
+        dictTmp = dict()
+        dictTmp[u'value'] = tagvalue
+        ddValues[tagpath] = dictTmp
+        
+    #    import pprint
+    #    pprint.pprint(ddValues)
+    fdb.values.put( query='fluiddb/about = "'+sAbout+'"',values=ddValues)
+    
+    print "Imported TaxId:", TaxId, " as about:",sAbout # , " with uid:", oTaxon.uid
 
     
 
