@@ -109,7 +109,7 @@ def GetTaxonData(idTax):
     # print data
     tree = ElementTree.parse(urllib2.urlopen(urlEfetch, data ))
     # tree.write(sys.stdout)
-    elTaxon = tree.findall('Taxon')
+    elTaxon = tree.findall('Taxon') # Beware not to match the <Taxon> items inside <LineageEx> !
     assert(len(elTaxon) == 1)
     return elTaxon[0]
 
@@ -117,7 +117,7 @@ def SplitSemicolonDelimitedString(sString):
     """
         Used as "typecast" parameter on strings that should be splitted into set of unicode strings into FluidInfo
     """
-    return [ uStr.strip() for uStr in unicode(sString).split(";")]
+    return [ uStr.strip().lower() for uStr in unicode(sString).split(";")]
             
 def ImportTaxonAttribute(oTaxon, xmlTaxonData, sAttrName, typecast=unicode, aslist=False, sTagName=None ):
     """
@@ -187,6 +187,8 @@ def ImportTaxonById(TaxId):
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "OtherNames/CommonName", typecast=unicode, aslist=True, sTagName=u"CommonNames")
     
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "Lineage", typecast=SplitSemicolonDelimitedString)
+    # NOTE: FluidInfo only implements "sets of strings". There is not support for "sets of integers"!
+    ImportTaxonAttribute(oTaxon, xmlTaxonData, "LineageEx/Taxon/TaxId", typecast=unicode, aslist=True, sTagName=u"LineageIds")
 
     # TODO: Query for LinkOut data and add info to this object
     #       Most wanted are Wikipedia ArticleIDs provided by iPhylo:
