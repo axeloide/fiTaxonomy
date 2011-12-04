@@ -189,7 +189,7 @@ def ImportTaxonById(TaxId):
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "Lineage", typecast=SplitSemicolonDelimitedString)
     # NOTE: FluidInfo only implements "sets of strings". There is not support for "sets of integers"!
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "LineageEx/Taxon/TaxId", typecast=unicode, aslist=True, sTagName=u"LineageIds")
-
+    
     # TODO: Query for LinkOut data and add info to this object
     #       Most wanted are Wikipedia ArticleIDs provided by iPhylo:
     #           http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=taxonomy&id=9606&cmd=llinks&holding=iPhylo
@@ -229,7 +229,7 @@ if __name__ == "__main__":
     # Import all primate species:   itSpecies = iterEsearch('taxonomy', "species[Rank] AND PRI[TXDV]")
 
     # Import just a single species: Bos taurus = cattle    
-    itSpecies = iterEsearch('taxonomy', "species[Rank] AND 9913[UID]")
+    itSpecies = iterEsearch('taxonomy', "species[Rank] AND (9913[UID] OR 9606[UID])")
 
 
     idSpecies = itSpecies.GetFirst()
