@@ -217,14 +217,13 @@ if __name__ == "__main__":
     username = fileCredentials.readline().strip()
     password = fileCredentials.readline().strip()
     fileCredentials.close()
-    # session = Fluid('https://sandbox.fluidinfo.com')  # The sandbox instance
-    session = Fluid()  # The main instance
-    session.login(username, password)
-    session.bind()
+    # fdb = Fluid('https://sandbox.fluidinfo.com')  # The sandbox instance
+    fdb = Fluid()  # The main instance
+    fdb.login(username, password)
+    fdb.bind()
     nsRoot = Namespace(username)
     
     sRoot = nsRoot.path     # Ugly use of a global, I know. :-)
-
 
     # We aren't ready yet to import all the 800k+ taxons of the NCBI database, so meanwhile
     # we use additonal query criteria to limit the result to just a few items!!
@@ -241,4 +240,9 @@ if __name__ == "__main__":
     while idSpecies is not None:
         ImportTaxonById(idSpecies)
         idSpecies = itSpecies.GetNext()
+        
+        
+    # Put some usefull info on the description-tag of the namespace objects.
+    Namespace(sRoot+u'/taxonomy')._set_description( u'Data imported by the fiTaxonomy scripts found at https://github.com/axeloide/fiTaxonomy')
+    Namespace(sRoot+u'/taxonomy/ncbi')._set_description( u'Data extracted from the "NCBI Taxonomy" database.')
 
