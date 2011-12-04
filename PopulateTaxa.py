@@ -165,7 +165,9 @@ def ImportTaxonAttribute(oTaxon, xmlTaxonData, sAttrName, typecast=unicode, asli
             oTaxon.set(sRoot+u"/taxonomy/ncbi/"+sTagName, typecast(elAttr[0].text))
         
         
-
+def containsAny(str, set):
+    """Check whether 'str' contains ANY of the chars in 'set'"""
+    return 1 in [c in str for c in set]
     
 def ImportTaxonById(TaxId):
     """
@@ -178,7 +180,13 @@ def ImportTaxonById(TaxId):
     assert( TaxId == int(xmlTaxonData.find("TaxId").text))
     
     # Assign about tag value
-    ScientificName = xmlTaxonData.find("ScientificName").text
+    ScientificName = unicode(xmlTaxonData.find("ScientificName").text)
+    
+    # WARNING: For the time being, we'll discard any unusual taxa with digits in their scientific names.
+    if containsAny(ScientificName, '0123456789:'):
+        print "Not importing weird taxon:", ScientificName
+        return
+    
     oTaxon = Object(about=ScientificName.lower())
 
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "ScientificName", typecast=unicode)
@@ -230,10 +238,11 @@ if __name__ == "__main__":
     # We aren't ready yet to import all the 800k+ taxons of the NCBI database, so meanwhile
     # we use additonal query criteria to limit the result to just a few items!!
 
-    # Import all primate species:   itSpecies = iterEsearch('taxonomy', "species[Rank] AND PRI[TXDV]")
+    # Import all primate species:
+    itSpecies = iterEsearch('taxonomy', "species[Rank] AND PRI[TXDV]")
 
-    # Import just a single species: Bos taurus = cattle    
-    itSpecies = iterEsearch('taxonomy', "species[Rank] AND (9913[UID] OR 9606[UID])")
+    # Import just a two species: Bos taurus, Homo sapiens
+    # itSpecies = iterEsearch('taxonomy', "species[Rank] AND (9913[UID] OR 9606[UID])")
 
 
     idSpecies = itSpecies.GetFirst()

@@ -84,7 +84,11 @@ def HandleIPhyloLinks(oTaxon, elObjUrl):
                 sWikiTitle = LookupWikipediaTitle(iWikiPageId)
                 print "Jay! Found a Wikipedia link to ArticleID:",iWikiPageId," with title:",sWikiTitle
                 oTaxon.set(sNcbiNS + u'/LinkOut/wikipedia', sWikiRawUrl)
-                oTaxon.set(sNcbiNS + u'/LinkOut/related-wikipedia', sWikiTitle.lower())
+                # Sometimes the iPhylo-linked Wikipedia Title doesn't match this Taxon's about value,
+                # in such cases we add a "related-wikipedia" tag pointing to the iPhylo Wikipedia article.
+                # Example: Taxon('homo sapiens') is linked by iPhylo to Wikipedia('Human')
+                if (sWikiTitle.lower() != oTaxon.about):
+                    oTaxon.set(sNcbiNS + u'/LinkOut/related-wikipedia', sWikiTitle.lower())
                 oWP = WikipediaPage(about=sWikiTitle.lower())
                 oWP.RelatedTaxon = oTaxon.about
                 oWP.PageId = iWikiPageId
@@ -92,11 +96,15 @@ def HandleIPhyloLinks(oTaxon, elObjUrl):
 
             elif (eObjUrl.find("LinkName").text == 'BBC Wildlife Finder'):
                 sBbcUrl = eObjUrl.find("Url").text
-                # Get most detailed hierarchy level
+                # TODO: The following line is so ugly!
                 sBbcTitle = sBbcUrl.split(u'/')[-1]
                 print "Jay! Found a BBC link:", sBbcUrl," with title:",sBbcTitle
                 oTaxon.set(sNcbiNS + u'/LinkOut/bbcwildlife', sBbcUrl)
-                oTaxon.set(sNcbiNS + u'/LinkOut/related-bbcwildlife', sBbcTitle.lower())
+                # Sometimes the iPhylo-linked BBC Title doesn't match this Taxon's about value,
+                # in such cases we add a "related-bbcwildlife" tag pointing to the iPhylo BBC article.
+                # Example: Taxon('homo sapiens') is linked by iPhylo to BBC('Human')
+                if (sBbcTitle.lower() != oTaxon.about):
+                    oTaxon.set(sNcbiNS + u'/LinkOut/related-bbcwildlife', sBbcTitle.lower())
                 oBP = BbcPage(about=sBbcTitle.lower())
                 oBP.RelatedTaxon = oTaxon.about
                 oBP.Url = sBbcUrl
