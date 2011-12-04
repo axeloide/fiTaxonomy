@@ -36,6 +36,33 @@ http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ELink
 
 
 
+ToDo
+----
+* Improve efficiency:
+    + Query Efetch in batches, instead of one-by-one
+    + Tag FluidInfo objects in a single call. Refer to: https://gist.github.com/1431251
+    
+* Error checking, error checking, error checking!
+  Everything is currently coded in a "blindly optimistic" way.
+  
+* Include a timestamp tag like "./taxonomy/ncbi/timestamp-lastupdate"
+
+
+Ideas for future tools
+----------------------
+* Create objects with about names that are:
+    +   NCBI synonyms
+    +   genebank common names
+    *   etc...
+  and tag them with something like "axeloide/taxonomy/redirect-to" 
+  We can even be very creative and harvest other language's common names via Wikipedia.
+  
+  
+  
+ 
+ 
+   
+ 
 
 
 Pointers to stuff

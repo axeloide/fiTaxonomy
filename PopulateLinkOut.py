@@ -161,6 +161,7 @@ if __name__ == "__main__":
     
     print "Found", len(oTaxa), "objects with a", NcbiTaxon.__dict__['TaxId'].tagpath, "tag:"
     for oTaxon in oTaxa:
+        print "Taxon:", oTaxon.about
         # Get LinkOut items. WARNING: Currently limited to iPhylo provider, for testing purposes.
         elObjUrl = GetLinkOutData(oTaxon.TaxId).findall('ObjUrl')
         print oTaxon.TaxId, "has", len(elObjUrl), "LinkOut entries."
