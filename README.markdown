@@ -40,6 +40,11 @@ http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ELink
 
 Pointers to stuff
 -----------------
+
+Terry's hint about how to tag several tags at once:
+https://gist.github.com/1431251
+
+
 There seems to exist a tool that returns JSON formatted results, but it requires
 an API key that must be requested, as documented here:
    http://entrezajax.appspot.com/developer.html
