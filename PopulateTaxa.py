@@ -123,11 +123,6 @@ def GetTaxonData(idTax):
     assert(len(elTaxon) == 1)
     return elTaxon[0]
 
-def SplitSemicolonDelimitedString(sString):
-    """
-        Used as "typecast" parameter on strings that should be splitted into set of unicode strings into FluidInfo
-    """
-    return [ uStr.strip().lower() for uStr in unicode(sString).split(";")]
             
 def ImportTaxonAttribute(oTaxon, xmlTaxonData, sAttrName, typecast=unicode, aslist=False, sTagName=None ):
     """
@@ -199,7 +194,7 @@ def ImportTaxonById(TaxId):
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "OtherNames/Synonym", typecast=unicode, aslist=True, sTagName=u"Synonyms")
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "OtherNames/CommonName", typecast=unicode, aslist=True, sTagName=u"CommonNames")
     
-    ImportTaxonAttribute(oTaxon, xmlTaxonData, "Lineage", typecast=SplitSemicolonDelimitedString)
+    ImportTaxonAttribute(oTaxon, xmlTaxonData, "LineageEx/Taxon/ScientificName", typecast=unicode, aslist=True, sTagName=u"Lineage")
     # NOTE: FluidInfo only implements "sets of strings". There is not support for "sets of integers"!
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "LineageEx/Taxon/TaxId", typecast=unicode, aslist=True, sTagName=u"LineageIds")
     
