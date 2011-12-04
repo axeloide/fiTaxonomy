@@ -28,16 +28,13 @@ except ImportError, e:
     from xml.etree import ElementTree
     
 from fom.session import Fluid
-from fom.mapping import Object, Namespace, Tag
+from fom.mapping import Object, Namespace
 from fom.errors import Fluid412Error
     
 
 urlEutils = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 urlEsearch = urlEutils + "esearch.fcgi"
 urlEfetch = urlEutils + "efetch.fcgi"
-urlElink = urlEutils + "elink.fcgi"
-
-
 
 
 class iterEsearch:
