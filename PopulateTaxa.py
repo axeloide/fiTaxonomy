@@ -36,6 +36,26 @@ urlEutils = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
 urlEsearch = urlEutils + "esearch.fcgi"
 urlEfetch = urlEutils + "efetch.fcgi"
 
+def GetTaxonData(lTaxIds):
+    """
+        Uses Efetch to get the whole Taxon record for a list of given NCBI-Taxonomy-IDs.
+        Returns an ElementTree with root at the <Taxon> tag.
+        
+        See example XML data at: 
+            eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=9913&mode=xml
+    """
+    # Request NCBI taxon data for the given ID
+    data = urllib.urlencode({ 'db'    : 'taxonomy'
+                             ,'mode': 'xml'
+                             ,'id'    : ','.join([str(iTax) for iTax in lTaxIds]) })
+    # print data
+    tree = ElementTree.parse(urllib2.urlopen(urlEfetch, data ))
+    # tree.write(sys.stdout)
+    elTaxon = tree.findall('Taxon') # Beware not to match the <Taxon> items inside <LineageEx> !
+    assert(len(elTaxon) == len(lTaxIds))
+    return elTaxon
+
+
 
 class iterEsearch:
     """Forward iterator for Esearch query results.
@@ -75,7 +95,11 @@ class iterEsearch:
         tree = ElementTree.parse(urllib2.urlopen(urlEsearch, data ))
         #tree.write(sys.stdout)
         self.count = int(tree.find("Count").text)
-        self.cache = [int(id.text) for id in tree.findall("IdList/Id")]
+        # Extract the TaxId values
+        lTaxIds = [int(id.text) for id in tree.findall("IdList/Id")]
+        # 
+        self.cache = GetTaxonData(lTaxIds)
+        
         
     def GetNext(self):
         """
@@ -101,24 +125,6 @@ class iterEsearch:
         return self.GetNext()
 
 
-def GetTaxonData(idTax):
-    """
-        Uses Efetch to get the whole Taxon record for a given NCBI-Taxonomy-ID.
-        Returns an ElementTree with root at the <Taxon> tag.
-        
-        See example XML data at: 
-            eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=9913&mode=xml
-    """
-    # Request NCBI taxon data for the given ID
-    data = urllib.urlencode({ 'db'    : 'taxonomy'
-                             ,'mode': 'xml'
-                             ,'id'    : idTax })
-    # print data
-    tree = ElementTree.parse(urllib2.urlopen(urlEfetch, data ))
-    # tree.write(sys.stdout)
-    elTaxon = tree.findall('Taxon') # Beware not to match the <Taxon> items inside <LineageEx> !
-    assert(len(elTaxon) == 1)
-    return elTaxon[0]
 
             
 def ImportTaxonAttribute(dictTagging, xmlTaxonData, sAttrName, typecast=unicode, aslist=False, sTagName=None ):
@@ -169,15 +175,14 @@ def containsAny(str, set):
     """Check whether 'str' contains ANY of the chars in 'set'"""
     return 1 in [c in str for c in set]
     
-def ImportTaxonById(TaxId):
+def ImportTaxon(xmlTaxonData):
     """
-        Imports a "NCBI Taxonomy" record for a given TaxonomyID into FluidInfo.
+        Imports a "NCBI Taxonomy" record from a XML <Taxon> tree into FluidInfo.
         
         Warning: Heavy work in progress!
     """
-    xmlTaxonData = GetTaxonData(TaxId)
+
     assert( xmlTaxonData is not None)
-    assert( TaxId == int(xmlTaxonData.find("TaxId").text))
     
     ScientificName = unicode(xmlTaxonData.find("ScientificName").text)
 
@@ -230,7 +235,7 @@ def ImportTaxonById(TaxId):
     #    pprint.pprint(ddValues)
     fdb.values.put( query='fluiddb/about = "'+sAbout+'"',values=ddValues)
     
-    print "Imported TaxId:", TaxId, " as about:",sAbout # , " with uid:", oTaxon.uid
+    print "Imported TaxId:", dictTagging[sRoot+u'/taxonomy/ncbi/TaxId'], " as about:",sAbout # , " with uid:", oTaxon.uid
 
     
 
@@ -262,12 +267,12 @@ if __name__ == "__main__":
     # itSpecies = iterEsearch('taxonomy', "species[Rank] AND (9913[UID] OR 9606[UID])")
 
 
-    idSpecies = itSpecies.GetFirst()
+    xmlTaxonData = itSpecies.GetFirst()
     print "Total number of results: ", itSpecies.count
 
-    while idSpecies is not None:
-        ImportTaxonById(idSpecies)
-        idSpecies = itSpecies.GetNext()
+    while xmlTaxonData is not None:
+        ImportTaxon(xmlTaxonData)
+        xmlTaxonData = itSpecies.GetNext()
         
         
     # Put some usefull info on the description-tag of the namespace objects.
