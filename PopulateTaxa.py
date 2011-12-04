@@ -1,8 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-Uses the NCBI E-Utilities API to iterate over taxa and import their records into FluidInfo.
+Iterates over the taxa listed in the NCBI Taxonomy database and creates
+corresponding FluidInfo objects with the most relevant tags.
 
-A testbench for @axeloide's thoughts about leveraging FluidInfo to get difficult data into a more usable representation.
+Uses the NCBI E-Utilities Esearch and Efetch:
+*   http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch
+*   http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch
+
+For testing purposes, the list of imported taxa is currently limited to just a few:
+* TaxId: 9913  as about: bos taurus    with uid: 82b383ce-e42e-4d79-be6d-10d5283c5443
+* TaxId: 9606  as about: homo sapiens  with uid: a1d5b1d2-8eef-450c-b772-b8e28ab58184
+
+This is kind of the core tool, since other scripts will later iterate over
+those FluidInfo objects to perform other tasks.
 
 """
 
