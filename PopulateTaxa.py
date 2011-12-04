@@ -113,6 +113,11 @@ def GetTaxonData(idTax):
     assert(len(elTaxon) == 1)
     return elTaxon[0]
 
+def SplitSemicolonDelimitedString(sString):
+    """
+        Used as "typecast" parameter on strings that should be splitted into set of unicode strings into FluidInfo
+    """
+    return [ uStr.strip() for uStr in unicode(sString).split(";")]
             
 def ImportTaxonAttribute(oTaxon, xmlTaxonData, sAttrName, typecast=unicode, aslist=False, sTagName=None ):
     """
@@ -154,6 +159,7 @@ def ImportTaxonAttribute(oTaxon, xmlTaxonData, sAttrName, typecast=unicode, asli
     else:
         assert(len(elAttr) == 1)
         oTaxon.set(sRoot+u"/taxonomy/ncbi/"+sTagName, typecast(elAttr[0].text))
+        
 
     
 def ImportTaxonById(TaxId):
@@ -175,8 +181,12 @@ def ImportTaxonById(TaxId):
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "ParentTaxId", typecast=int)
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "Rank", typecast=unicode)
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "Division", typecast=unicode)
+    ImportTaxonAttribute(oTaxon, xmlTaxonData, "OtherNames/GenbankCommonName", typecast=unicode, sTagName=u"GenbankCommonName")
+    
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "OtherNames/Synonym", typecast=unicode, aslist=True, sTagName=u"Synonyms")
     ImportTaxonAttribute(oTaxon, xmlTaxonData, "OtherNames/CommonName", typecast=unicode, aslist=True, sTagName=u"CommonNames")
+    
+    ImportTaxonAttribute(oTaxon, xmlTaxonData, "Lineage", typecast=SplitSemicolonDelimitedString)
 
     # TODO: Query for LinkOut data and add info to this object
     #       Most wanted are Wikipedia ArticleIDs provided by iPhylo:
