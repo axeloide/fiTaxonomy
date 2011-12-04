@@ -94,11 +94,14 @@ class iterEsearch:
         #print "Debug: ", data
         tree = ElementTree.parse(urllib2.urlopen(urlEsearch, data ))
         #tree.write(sys.stdout)
-        self.count = int(tree.find("Count").text)
+        
         # Extract the TaxId values
         lTaxIds = [int(id.text) for id in tree.findall("IdList/Id")]
-        # 
-        self.cache = GetTaxonData(lTaxIds)
+        # If we got some more TaxId, then Efetch the corresponding Taxon data,
+        # in a chunk as big as the one returned by Esearch.
+        if len(lTaxIds):
+            self.cache = GetTaxonData(lTaxIds)
+            self.count = int(tree.find("Count").text)
         
         
     def GetNext(self):
@@ -261,7 +264,7 @@ if __name__ == "__main__":
     # we use additonal query criteria to limit the result to just a few items!!
 
     # Import all primate species:
-    itSpecies = iterEsearch('taxonomy', "species[Rank] AND PRI[TXDV]")
+    itSpecies = iterEsearch(db='taxonomy', term="species[Rank] AND PRI[TXDV]", chunksize=100)
 
     # Import just a two species: Bos taurus, Homo sapiens
     # itSpecies = iterEsearch('taxonomy', "species[Rank] AND (9913[UID] OR 9606[UID])")

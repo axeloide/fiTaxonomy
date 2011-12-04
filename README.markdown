@@ -37,13 +37,11 @@ http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ELink
 
 
 ToDo
-----
-* Improve efficiency:
-    + Query Efetch in batches, instead of one-by-one
-    + Tag FluidInfo objects in a single call. Refer to: https://gist.github.com/1431251
-    
+----    
 * Error checking, error checking, error checking!
   Everything is currently coded in a "blindly optimistic" way.
+  A HowTo on error checking urllib2 calls:
+    + http://docs.python.org/howto/urllib2.html
   
 * Include a timestamp tag like "./taxonomy/ncbi/timestamp-lastupdate"
 
@@ -67,10 +65,6 @@ Ideas for future tools
 
 Pointers to stuff
 -----------------
-
-Terry's hint about how to tag several tags at once:
-https://gist.github.com/1431251
-
 
 There seems to exist a tool that returns JSON formatted results, but it requires
 an API key that must be requested, as documented here:
