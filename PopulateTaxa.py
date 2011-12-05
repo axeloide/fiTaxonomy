@@ -67,7 +67,7 @@ class iterTaxa:
     """Forward iterator for Taxonomy query results.
     
        Given a query-term, it allows to iterate one by one though the
-       query-matches, returning those as ElementTrees containing a whole Taxon.
+       query-matches, returning those as ElementTrees containing all available NCBI-data for a Taxon.
        
        Takes care internally to request data in large chunks, instead of one by one.
        Only forward iterator.
@@ -142,7 +142,7 @@ def ImportTaxonAttribute(dictTagging, xmlTaxonData, sAttrName, typecast=unicode,
     """
         Does the actual transfer of values from the XML into FluidInfo tags.
         
-        @note It prepends the tag-path in sRoot to the tags to be imported. sRoot is currently just the user-namespace.
+        @note It prepends the tag-path in sUserNS to the tags to be imported. sUserNS is currently just the user-namespace.
         
         @param dictTagging: A dict[tagpath]=tagvalue for the object of the taxon we are dealing with.
 
@@ -175,11 +175,11 @@ def ImportTaxonAttribute(dictTagging, xmlTaxonData, sAttrName, typecast=unicode,
     if aslist:
         ValueList = [typecast(item.text.strip()) for item in elAttr]
         if len(ValueList)>0:
-            dictTagging[sRoot+u"/taxonomy/ncbi/"+sTagName] =  ValueList
+            dictTagging[sUserNS+u"/taxonomy/ncbi/"+sTagName] =  ValueList
     else:
         assert( len(elAttr)<2 )
         if len(elAttr)==1:
-            dictTagging[sRoot+u"/taxonomy/ncbi/"+sTagName] = typecast(elAttr[0].text)
+            dictTagging[sUserNS+u"/taxonomy/ncbi/"+sTagName] = typecast(elAttr[0].text)
         
         
 def containsAny(str, set):
@@ -246,7 +246,7 @@ def ImportTaxon(xmlTaxonData):
     #    pprint.pprint(ddValues)
     fdb.values.put( query='fluiddb/about = "'+sAbout+'"',values=ddValues)
     
-    print "Imported TaxId:", dictTagging[sRoot+u'/taxonomy/ncbi/TaxId'], " as about:",sAbout # , " with uid:", oTaxon.uid
+    print "Imported TaxId:", dictTagging[sUserNS+u'/taxonomy/ncbi/TaxId'], " as about:",sAbout # , " with uid:", oTaxon.uid
 
     
 
@@ -264,9 +264,9 @@ if __name__ == "__main__":
     fdb = Fluid()  # The main instance
     fdb.login(username, password)
     fdb.bind()
-    nsRoot = Namespace(username)
+    nsUser = Namespace(username)
     
-    sRoot = nsRoot.path     # Ugly use of a global, I know. :-)
+    sUserNS = nsUser.path     # Ugly use of a global, I know. :-)
 
     # We aren't ready yet to import all the 800k+ taxons of the NCBI database, so meanwhile
     # we use additonal query criteria to limit the result to just a few items!!
@@ -287,6 +287,6 @@ if __name__ == "__main__":
         
         
     # Put some usefull info on the description-tag of the namespace objects.
-    Namespace(sRoot+u'/taxonomy')._set_description( u'Data imported by the fiTaxonomy scripts found at https://github.com/axeloide/fiTaxonomy')
-    Namespace(sRoot+u'/taxonomy/ncbi')._set_description( u'Data extracted from the "NCBI Taxonomy" database.')
+    Namespace(sUserNS+u'/taxonomy')._set_description( u'Data imported by the fiTaxonomy scripts found at https://github.com/axeloide/fiTaxonomy')
+    Namespace(sUserNS+u'/taxonomy/ncbi')._set_description( u'Data extracted from the "NCBI Taxonomy" database.')
 
