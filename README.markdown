@@ -13,8 +13,8 @@ Iterates over the taxa listed in the NCBI Taxonomy database and creates
 corresponding FluidInfo objects with the most relevant tags.
 
 Uses the NCBI E-Utilities Esearch and Efetch:
-*   http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch
-*   http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch
+* http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch
+* http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch
 
 This is kind of the core tool, since other scripts will later iterate over
 those FluidInfo objects to perform other tasks.

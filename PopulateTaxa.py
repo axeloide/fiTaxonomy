@@ -7,12 +7,14 @@ Uses the NCBI E-Utilities Esearch and Efetch:
 *   http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch
 *   http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch
 
-For testing purposes, the list of imported taxa is currently limited to just a few:
+This is kind of the core tool, since other scripts will later iterate over
+those FluidInfo objects to perform other tasks.
+
+For testing purposes, the list of imported taxa was first limited to just a few:
 * TaxId: 9913  as about: bos taurus    with uid: 82b383ce-e42e-4d79-be6d-10d5283c5443
 * TaxId: 9606  as about: homo sapiens  with uid: a1d5b1d2-8eef-450c-b772-b8e28ab58184
 
-This is kind of the core tool, since other scripts will later iterate over
-those FluidInfo objects to perform other tasks.
+Currently it processes all the species of division primates, whose scientific names don't contain any digits.
 
 """
 
@@ -38,29 +40,36 @@ urlEfetch = urlEutils + "efetch.fcgi"
 
 def GetTaxonData(lTaxIds):
     """
-        Uses Efetch to get the whole Taxon record for a list of given NCBI-Taxonomy-IDs.
-        Returns an ElementTree with root at the <Taxon> tag.
+        Given a list of NCBI-Taxonomy-IDs, it uses Efetch to get
+        their Taxon data in a single request.
+        
+        Returns a list of ElementTrees, each rooted at the <Taxon> tag.
         
         See example XML data at: 
-            eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=9913&mode=xml
+            eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=9913,9606&mode=xml
     """
-    # Request NCBI taxon data for the given ID
+    # Request NCBI taxon data for the given ID list
     data = urllib.urlencode({ 'db'    : 'taxonomy'
-                             ,'mode': 'xml'
+                             ,'mode'  : 'xml'
                              ,'id'    : ','.join([str(iTax) for iTax in lTaxIds]) })
     # print data
     tree = ElementTree.parse(urllib2.urlopen(urlEfetch, data ))
     # tree.write(sys.stdout)
-    elTaxon = tree.findall('Taxon') # Beware not to match the <Taxon> items inside <LineageEx> !
+    # Beware to match only <Taxon> items at the
+    # first level, but not the ones inside <LineageEx> !
+    elTaxon = tree.findall('Taxon') 
     assert(len(elTaxon) == len(lTaxIds))
     return elTaxon
 
 
 
-class iterEsearch:
-    """Forward iterator for Esearch query results.
+class iterTaxa:
+    """Forward iterator for Taxonomy query results.
     
-       Iterates one by one through the ID's that matched a Esearch query.
+       Given a query-term, it allows to iterate one by one though the
+       query-matches, returning those as ElementTrees containing a whole Taxon.
+       
+       Takes care internally to request data in large chunks, instead of one by one.
        Only forward iterator.
     
        NCBI Esearch Documentation at:
@@ -75,8 +84,7 @@ class iterEsearch:
                             
         @param chunksize:   Number of results per API-query. Defaults to 20. Those are cached and iterated one by one
     """
-    def __init__(self, db, term, chunksize=20):
-        self.db = db
+    def __init__(self, term, chunksize=20):
         self.term = term
         self.chunksize = chunksize
         self.start = 0
@@ -87,7 +95,7 @@ class iterEsearch:
         """
             Get the chunk of results that starts at retstart=self.start
         """
-        data = urllib.urlencode({ 'db'      : self.db
+        data = urllib.urlencode({ 'db'      : 'taxonomy'
                                  ,'term'    : self.term
                                  ,'retstart': self.start
                                  ,'retmax'  : self.chunksize  })
@@ -264,9 +272,9 @@ if __name__ == "__main__":
     # we use additonal query criteria to limit the result to just a few items!!
 
     # Import all primate species:
-    itSpecies = iterEsearch(db='taxonomy', term="species[Rank] AND PRI[TXDV]", chunksize=100)
+    itSpecies = iterTaxa(term="species[Rank] AND PRI[TXDV]", chunksize=100)
 
-    # Import just a two species: Bos taurus, Homo sapiens
+    # Import just two species: Bos taurus, Homo sapiens
     # itSpecies = iterEsearch('taxonomy', "species[Rank] AND (9913[UID] OR 9606[UID])")
 
 
