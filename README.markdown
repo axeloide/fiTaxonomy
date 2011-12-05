@@ -56,6 +56,17 @@ Ideas for future tools
   We can even be very creative and harvest other language's common names via Wikipedia.
   
   
+* Create objects with about names that are:
+   + Names of taxons in other languages. e.g. "perro", "dog", "hund"
+   
+  ... and then tag those with a "related-taxonomy" that links those to the
+  actual taxonomy object. e.g. about="canis lupus"
+  
+  Use Wikipedia API to get foreign articles:
+   + http://www.mediawiki.org/wiki/API:Query_-_Properties#langlinks_.2F_ll
+   
+   
+  
   
  
  

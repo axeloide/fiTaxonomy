@@ -156,7 +156,7 @@ def ImportTaxonAttribute(dictTagging, xmlTaxonData, sAttrName, typecast=unicode,
                             It has the structure required by the "PUT VALUES" API of FluidInfo as documented here:
                                 http://api.fluidinfo.com/html/api.html#values_PUT
                             Example:
-                                dict[u'tagpath']={u'value': tagvalue}
+                                dict[<tagpath>]={u'value': <tagvalue>}
 
         @param xmlTaxonData: An ElementTree containing the <Taxon> XML branch sent by NCBI.
                              See example XML: eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=9913&mode=xml
@@ -241,18 +241,10 @@ def ImportTaxon(xmlTaxonData):
     
     ImportTaxonAttribute(dictTagging, xmlTaxonData, "LineageEx/Taxon/ScientificName", typecast=unicode, aslist=True, sTagName=u"Lineage")
     # NOTE: FluidInfo only implements "sets of strings", there's not support for "sets of integers"!
-    #       Therefore we have to import these as unicode!
+    #       Therefore we have to import the following as unicode!
     ImportTaxonAttribute(dictTagging, xmlTaxonData, "LineageEx/Taxon/TaxId", typecast=unicode, aslist=True, sTagName=u"LineageIds")
     
-    # TODO: Query for LinkOut data and add info to this object
-    #       Most wanted are Wikipedia ArticleIDs provided by iPhylo:
-    #           http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=taxonomy&id=9606&cmd=llinks&holding=iPhylo
-    #       Beware that there are several LinkOut items provided by iPhylo!! We want those containing:
-    #           <LinkName>Wikipedia</LinkName>
-    #       Translate ArticleId into Wikipedia Title with:
-    #           http://en.wikipedia.org/w/api.php?action=query&pageids=682482&format=xml
-    #           more info on  http://www.mediawiki.org/wiki/API
-
+ 
 
     ##################################
     # Create and do all the tagging in

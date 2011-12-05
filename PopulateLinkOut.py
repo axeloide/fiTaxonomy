@@ -8,6 +8,17 @@ objects/datasources in FluidInfo, creating and populating those where necessary.
 
 http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ELink
 
+Some pointers:
+   # TODO: Query for LinkOut data and add info to objects
+    #       Most wanted are Wikipedia ArticleIDs provided by iPhylo:
+    #           http://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?dbfrom=taxonomy&id=9606&cmd=llinks&holding=iPhylo
+    #       Beware that there are several LinkOut items provided by iPhylo!! We want those containing:
+    #           <LinkName>Wikipedia</LinkName>
+    #       Translate ArticleId into Wikipedia Title with:
+    #           http://en.wikipedia.org/w/api.php?action=query&pageids=682482&format=xml
+    #           more info on  http://www.mediawiki.org/wiki/API
+
+
 """
 
 
@@ -55,6 +66,14 @@ def GetLinkOutData(idTax):
     return eUrlSet
     
 def LookupWikipediaTitle(iArticleId):
+    """
+        Convert Page-ID into article title.
+        Done as explained here:
+            http://blog.dataunbound.com/2009/04/10/pageidcurid-as-a-unique-id-for-wikipedia-pages/
+        
+        See also:
+            http://stackoverflow.com/questions/6168020/what-is-wikipedia-pageid-how-to-change-it-into-real-page-url
+    """
     data = urllib.urlencode({ 'action' : 'query'
                              ,'format' : 'xml'
                              ,'pageids': iArticleId })
