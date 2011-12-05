@@ -152,7 +152,11 @@ def ImportTaxonAttribute(dictTagging, xmlTaxonData, sAttrName, typecast=unicode,
         
         @note It prepends the tag-path in sUserNS to the tags to be imported. sUserNS is currently just the user-namespace.
         
-        @param dictTagging: [out] A dict[u'tagpath']=tagvalue for the object of the taxon we are dealing with.
+        @param dictTagging: [out] The dict containing the tag paths and values that will later be committed into FluidInfo.
+                            It has the structure required by the "PUT VALUES" API of FluidInfo as documented here:
+                                http://api.fluidinfo.com/html/api.html#values_PUT
+                            Example:
+                                dict[u'tagpath']={u'value': tagvalue}
 
         @param xmlTaxonData: An ElementTree containing the <Taxon> XML branch sent by NCBI.
                              See example XML: eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=9913&mode=xml
@@ -176,17 +180,28 @@ def ImportTaxonAttribute(dictTagging, xmlTaxonData, sAttrName, typecast=unicode,
     
     elAttr = xmlTaxonData.findall(sAttrName)
 
+    # Relative tag-path defaults to XPath
     if (sTagName is None):
         sTagName = sAttrName
         
+    TagValue = None
+        
     if aslist:
-        ValueList = [typecast(item.text.strip()) for item in elAttr]
-        if len(ValueList)>0:
-            dictTagging[sUserNS+u"/taxonomy/ncbi/"+sTagName] =  ValueList
+        TagValue = [typecast(item.text.strip()) for item in elAttr]
+        if len(TagValue)==0:
+            TagValue = None
     else:
         assert( len(elAttr)<2 )
         if len(elAttr)==1:
-            dictTagging[sUserNS+u"/taxonomy/ncbi/"+sTagName] = typecast(elAttr[0].text)
+            TagValue = typecast(elAttr[0].text)
+    
+    # Do NOT tag if not XML-item was found!
+    # We want to avoid empty-valued tags, since those would ruin FluidInfo queries with "has" operator.
+    if TagValue is not None:
+        # Generate the dict-in-dict structure required for the
+        # "values" parameter of fdb.values.put():
+        #      dict[tagpath]={'values', tagvalue}
+        dictTagging[sUserNS+u"/taxonomy/ncbi/"+sTagName] = {u'value': TagValue}
         
         
 def containsAny(str, set):
@@ -225,7 +240,8 @@ def ImportTaxon(xmlTaxonData):
     ImportTaxonAttribute(dictTagging, xmlTaxonData, "OtherNames/CommonName", typecast=unicode, aslist=True, sTagName=u"CommonNames")
     
     ImportTaxonAttribute(dictTagging, xmlTaxonData, "LineageEx/Taxon/ScientificName", typecast=unicode, aslist=True, sTagName=u"Lineage")
-    # NOTE: FluidInfo only implements "sets of strings". There is not support for "sets of integers"!
+    # NOTE: FluidInfo only implements "sets of strings", there's not support for "sets of integers"!
+    #       Therefore we have to import these as unicode!
     ImportTaxonAttribute(dictTagging, xmlTaxonData, "LineageEx/Taxon/TaxId", typecast=unicode, aslist=True, sTagName=u"LineageIds")
     
     # TODO: Query for LinkOut data and add info to this object
@@ -241,19 +257,9 @@ def ImportTaxon(xmlTaxonData):
     ##################################
     # Create and do all the tagging in
     # a single call to the FluidInfo-API!
-    ##
-    # Convert into the cumbersome dict in dict format needed by the values.put() API
-    ddValues = dict()
-    for tagpath, tagvalue in dictTagging.items():
-        dictTmp = dict()
-        dictTmp[u'value'] = tagvalue
-        ddValues[tagpath] = dictTmp
-        
-    #    import pprint
-    #    pprint.pprint(ddValues)
-    fdb.values.put( query='fluiddb/about = "'+sAbout+'"',values=ddValues)
+    fdb.values.put( query='fluiddb/about = "'+sAbout+'"',values=dictTagging)
     
-    print "Imported TaxId:", dictTagging[sUserNS+u'/taxonomy/ncbi/TaxId'], " as about:",sAbout # , " with uid:", oTaxon.uid
+    print "Imported TaxId:", dictTagging[sUserNS+u'/taxonomy/ncbi/TaxId'][u'value'], " as about:",sAbout # , " with uid:", oTaxon.uid
 
     
 
