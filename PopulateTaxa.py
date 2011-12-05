@@ -45,6 +45,9 @@ def GetTaxonData(lTaxIds):
         
         Returns a list of ElementTrees, each rooted at the <Taxon> tag.
         
+        Documentation of Efetch:
+            http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.EFetch
+        
         See example XML data at: 
             eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=9913,9606&mode=xml
     """
@@ -75,10 +78,14 @@ class iterTaxa:
        NCBI Esearch Documentation at:
            http://www.ncbi.nlm.nih.gov/books/NBK25499/#chapter4.ESearch
 
-        @param db:          Database name as listed by http://eutils.ncbi.nlm.nih.gov/entrez/eutils/einfo.fcgi
-                            e.g.: "taxonomy", 
-                        
-        @param term:        Query term using Entrez syntax.
+        @param term:        Query term using Entrez syntax operating on NCBI-Taxonomy database.
+                            Examples:
+                                "species[Rank] AND PRI[TXDV]"
+                                "species[Rank] AND (9913[UID] OR 9606[UID])"
+                                
+                            Obtain full list of available field and index names, by querying Einfo:
+                                http://eutils.ncbi.nlm.nih.gov/entrez/eutils/einfo.fcgi?db=taxonomy    
+                            
                             Bloated documentation here:
                                 http://www.ncbi.nlm.nih.gov/books/NBK3837/#EntrezHelp.Indexed_Fields_Query_Translat
                             
@@ -105,7 +112,7 @@ class iterTaxa:
         
         # Extract the TaxId values
         lTaxIds = [int(id.text) for id in tree.findall("IdList/Id")]
-        # If we got some more TaxId, then Efetch the corresponding Taxon data,
+        # If we got any TaxIds, then we'll Efetch the corresponding Taxon data
         # in a chunk as big as the one returned by Esearch.
         if len(lTaxIds):
             self.cache = GetTaxonData(lTaxIds)
@@ -114,8 +121,8 @@ class iterTaxa:
         
     def GetNext(self):
         """
-            Get the next ID.
-            Returns None if there is no ID left.
+            Get the next Taxon that matches the query.
+            Returns None if there are no matches left.
         """
         if (len(self.cache)==0):
             self.GetNextChunk()
@@ -128,7 +135,7 @@ class iterTaxa:
         
     def GetFirst(self):
         """
-            Get the next ID.
+            Get the first Taxon that matches the query.
             Returns None if query didn't match or succeed.
         """
         self.start = 0
@@ -141,10 +148,11 @@ class iterTaxa:
 def ImportTaxonAttribute(dictTagging, xmlTaxonData, sAttrName, typecast=unicode, aslist=False, sTagName=None ):
     """
         Does the actual transfer of values from the XML into FluidInfo tags.
+        It actually doesn't tag yet, but it transfers the data into a dict(), which will later be used to do the taggin in a single API request.
         
         @note It prepends the tag-path in sUserNS to the tags to be imported. sUserNS is currently just the user-namespace.
         
-        @param dictTagging: A dict[tagpath]=tagvalue for the object of the taxon we are dealing with.
+        @param dictTagging: [out] A dict[u'tagpath']=tagvalue for the object of the taxon we are dealing with.
 
         @param xmlTaxonData: An ElementTree containing the <Taxon> XML branch sent by NCBI.
                              See example XML: eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=taxonomy&id=9913&mode=xml
@@ -158,11 +166,10 @@ def ImportTaxonAttribute(dictTagging, xmlTaxonData, sAttrName, typecast=unicode,
                          e.g. typecast=int
                          
         @param aslist: Boolean. 
-                       If False, then sAttrName should yield only a single XML item that will be treated as a scalar.
+                       If False (the default), then sAttrName should yield only a single XML item that will be treated as a scalar.
                        If True, then all the items referred by sAttrName will be assembled into a list/set.
-                       TODO: In some cases we will want to get a e.g. semicolon delimited string and split it into a list/set!
 
-        @param sTagName: The FluidInfo (relative) tag path.
+        @param sTagName: The FluidInfo tag path  (relative to the prefix sUserNS).
                          Defaults to the XPath given in sAttrName.
                           
     """
@@ -275,7 +282,7 @@ if __name__ == "__main__":
     itSpecies = iterTaxa(term="species[Rank] AND PRI[TXDV]", chunksize=100)
 
     # Import just two species: Bos taurus, Homo sapiens
-    # itSpecies = iterEsearch('taxonomy', "species[Rank] AND (9913[UID] OR 9606[UID])")
+    # itSpecies = iterEsearch("species[Rank] AND (9913[UID] OR 9606[UID])")
 
 
     xmlTaxonData = itSpecies.GetFirst()
