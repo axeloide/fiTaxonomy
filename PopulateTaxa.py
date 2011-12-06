@@ -30,8 +30,7 @@ except ImportError, e:
     from xml.etree import ElementTree
     
 from fom.session import Fluid
-from fom.mapping import Object, Namespace
-from fom.errors import Fluid412Error
+from fom.mapping import Namespace
     
 
 urlEutils = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/"
