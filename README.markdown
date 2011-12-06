@@ -64,6 +64,23 @@ Ideas for future tools
   
   Use Wikipedia API to get foreign articles:
    + http://www.mediawiki.org/wiki/API:Query_-_Properties#langlinks_.2F_ll
+     Examples:
+        For a given article, get alternative languages:
+        http://en.wikipedia.org/w/api.php?action=query&titles=Dog&prop=langlinks&lllimit=200&format=xml
+        
+        Get a list of all language-ids and autoglossonyms:
+        http://en.wikipedia.org/w/api.php?action=query&meta=siteinfo&siprop=languages
+        
+        Or use a list by a more competent authority:
+        http://www.sil.org/iso639-3/codes.asp
+        
+        http://www.loc.gov/standards/iso639-2/php/English_list.php
+        http://www.loc.gov/standards/iso639-2/ISO-639-2_utf-8.txt
+        
+        http://www.loc.gov/standards/iso639-5/iso639-5.pipe.txt
+        http://www.loc.gov/standards/iso639-5/iso639-5.skos.rdf
+        
+   
    
    
   
